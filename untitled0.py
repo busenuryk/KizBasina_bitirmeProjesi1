@@ -10,19 +10,48 @@ Original file is located at
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
+# Veri setini yükleme
 df = pd.read_csv('/content/customer_experience_data.csv')
 print(df.head())
 
-sayisal_sutunlar = df.select_dtypes(include='number').columns
-kategorik_sutunlar = df.select_dtypes(include='object').columns
+# Sütunları sayısal ve kategorik olarak ayırma
+sayisal_sutunlar = df.select_dtypes(include='number').columns.tolist()
+kategorik_sutunlar = df.select_dtypes(include='object').columns.tolist()
 
-print("Sayısal sütunlar:", list(sayisal_sutunlar))
-print("Kategorik sütunlar:", list(kategorik_sutunlar))
+print("Sayısal sütunlar:", sayisal_sutunlar)
+print("Kategorik sütunlar:", kategorik_sutunlar)
 
+# Eksik değer kontrolü
+print(df.isnull().sum())
+
+# IQR ile aykırı Değer kontrolü
+outlier_info = {}
+for col in sayisal_sutunlar:
+    q1 = df[col].quantile(0.25)
+    q3 = df[col].quantile(0.75)
+    iqr = q3 - q1
+    alt_sin = q1 - 1.5 * iqr
+    ust_sin = q3 + 1.5 * iqr
+    
+    mask = (df[col] < alt_sin) | (df[col] > ust_sin)
+    count = mask.sum()
+    outlier_info[col] = count
+    print(f"{col}: {count} aykırı değer bulundu")
+
+# Aykırı değer kontrolünü görselleştirme
+for col in sayisal_sutunlar:
+    plt.figure(figsize=(6,4))
+    sns.boxplot(x=df[col])
+    plt.title(f'Boxplot: {col}')
+    plt.show()
+
+# Sayısal sütunlar için istatistiksel özet
 print("\nSayısal sütunlar için özet istatistikler:")
 print(df[sayisal_sutunlar].describe())
 
+# Kategorik sütunlar için frekans tabloları
 print("\nKategorik sütunlar için frekans tablosu:")
 for col in list(kategorik_sutunlar)[:3]:
     print(f"\n{col} sütunu değer dağılımı:")
@@ -32,25 +61,47 @@ for col in kategorik_sutunlar:
     print(f"\n{col} sütunu değer dağılımı:")
     print(df[col].value_counts())
 
-#Cinsiyet dağılımı
-sns.countplot(x='Gender', data=df)
+# Kategorik sütunların görselleştirilmesi
+for col in kategorik_sutunlar:
+    plt.figure(figsize=(6,4))
+    sns.countplot(data=df, x=col)
+    plt.title(f'{col} Dağılımı')
+    plt.xlabel(col)
+    plt.ylabel('Frekans')
+    plt.xticks(rotation=30)
+    plt.show()
+
+# Cİnsiyet için pie chart
+df['Gender'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#ffcc99','#99ccff'])
 plt.title('Cinsiyet Dağılımı')
-plt.show()
-
-#Lokasyon dağılımı
-sns.countplot(x='Location', data=df)
-plt.title('Lokasyon Dağılımı')
-plt.show()
-
-#Retention durumunun dağılımı (pasta grafiği)
-df['Retention_Status'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#66b3ff','#ff9999'])
-plt.title('Retention Durumu')
 plt.ylabel('')
 plt.show()
 
+# Lokasyon için pie chart
+df['Location'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#ff9999','#66b3ff','#99ff99'])
+plt.title('Lokasyon Dağılımı')
+plt.ylabel('')
+plt.show()
 
-#Müşteri tutulumu (Retention Status) dağılımı
+# Müşteri tutulumu için pie chart
 df['Retention_Status'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#66b3ff','#ff9999'])
 plt.title('Müşteri Tutulumu')
 plt.ylabel('')
 plt.show()
+
+# Sayısal sütunların görselleştirmesi
+for col in sayisal_sutunlar:
+    plt.figure(figsize=(12,4))
+
+    # Histogram
+    plt.subplot(1, 2, 1)
+    sns.histplot(data=df, x=col, kde=True, bins=20, color='skyblue')
+    plt.title(f'{col} Histogramı')
+
+    # Boxplot
+    plt.subplot(1, 2, 2)
+    sns.boxplot(data=df, x=col, color='salmon')
+    plt.title(f'{col} Boxplot')
+
+    plt.tight_layout()
+    plt.show()
