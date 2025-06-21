@@ -1,4 +1,4 @@
-# KizBasina_bitirmeProjesi1
+# Veri Analizi Bitirme Projesi
 
 Patika & Kız Başına tarafından düzenlenen veri analizi eğitiminin ilk bitirme projesi.
 
